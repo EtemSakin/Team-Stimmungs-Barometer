@@ -1,0 +1,2 @@
+# Epic 01 – Spezifikation
+GET / zeigt Smiley-Auswahl bzw. Teilnahmebestätigung. POST /vote/ verarbeitet ausschließlich 1–5 mit CSRF-Token. Ungültig → HTTP 400, Duplikat → Status already, erfolgreich → Status thanks. UniqueConstraint(day, daily_voter_hash). Hash = HMAC-SHA256(SECRET_KEY, "mood-v1:{day}:{token}"). Zeitberechnung Europe/Berlin. HttpOnly/SameSite=Lax-Cookie, Secure in Produktion. Kein Name, keine E-Mail oder gespeicherte IP im Model. Akzeptanz: je Browser einmal täglich, Validierung, CSRF, responsive und zugängliche Auswahl.

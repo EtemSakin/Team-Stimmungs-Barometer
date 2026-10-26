@@ -1,0 +1,100 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Anonymes Team-Stimmungs-Barometer mit täglichem Check-in.">
+  <title>TeamPulse – Stimmungs-Barometer</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <script defer src="{% static 'js/trend.js' %}"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="{% url 'home' %}" aria-label="TeamPulse – Startseite">
+        <span class="brand-mark" aria-hidden="true">✳</span> TeamPulse
+      </a>
+      <span class="topbar-note"><span class="privacy-dot"></span> Anonym &amp; datensparsam</span>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> DEIN TÄGLICHER CHECK-IN</div>
+        <h1 id="hero-title">Wie fühlst du dich <em>heute?</em></h1>
+        <p class="hero-description">Deine Stimmung zählt. Wähle einen Smiley und hilf deinem Team, den gemeinsamen Puls besser zu verstehen.</p>
+      </section>
+
+      <section class="panel voting-panel" aria-labelledby="vote-title">
+        <div class="panel-heading">
+          <div><p class="section-overline">01 / EINSTIEG</p><h2 id="vote-title">Dein Stimmungsmoment</h2></div>
+          <span class="step-chip">Einmal täglich</span>
+        </div>
+        {% if status == "thanks" %}
+          <div class="notice success" role="status">✓ Danke für deine Teilnahme! Deine Stimmung wurde gespeichert.</div>
+        {% elif status == "already" %}
+          <div class="notice info" role="status">Du hast für heute bereits abgestimmt.</div>
+        {% elif status == "invalid" %}
+          <div class="notice error" role="alert">Bitte wähle eine gültige Stimmung.</div>
+        {% endif %}
+
+        {% if has_voted %}
+          <div class="already-done"><span class="check-icon" aria-hidden="true">✓</span><h3>Heute schon dabei!</h3><p>Danke, dass du deine Stimmung geteilt hast. Morgen kannst du erneut abstimmen.</p></div>
+        {% else %}
+          <form method="post" action="{% url 'vote' %}" class="vote-form">
+            {% csrf_token %}
+            <fieldset class="mood-fieldset">
+              <legend>Wie geht es dir gerade?</legend>
+              <div class="mood-options">
+                {% for value, label in moods %}
+                  <label class="mood-option">
+                    <input type="radio" name="score" value="{{ value }}" required {% if form.score.value == value %}checked{% endif %}>
+                    <span class="mood-option-inner">
+                      <span class="mood-emoji" aria-hidden="true">{% if value == "1" %}😫{% elif value == "2" %}🙁{% elif value == "3" %}😐{% elif value == "4" %}🙂{% else %}😄{% endif %}</span>
+                      <span class="mood-label">{{ label }}</span>
+                    </span>
+                  </label>
+                {% endfor %}
+              </div>
+            </fieldset>
+            {% if form.score.errors %}<p class="field-error" role="alert">{{ form.score.errors|striptags }}</p>{% endif %}
+            <button class="primary-button" type="submit">Stimmung absenden <span aria-hidden="true">↗</span></button>
+            <p class="privacy-hint">🔒 Keine Namen, keine Konten und keine IP-Adressen in unserer Abstimmungsdatenbank.</p>
+          </form>
+        {% endif %}
+      </section>
+
+      <section class="panel insight-panel" aria-labelledby="insights-title">
+        <div class="panel-heading">
+          <div><p class="section-overline">02 / TEAMÜBERBLICK</p><h2 id="insights-title">Gemeinsam im Blick</h2></div>
+          <span class="step-chip">Letzte 7 Tage</span>
+        </div>
+        <div class="metrics">
+          <div class="metric"><span class="metric-label">Durchschnitt sichtbarer Tage</span><strong>{% if trend.average_score is not None %}{{ trend.average_score|floatformat:1 }} <small>/ 5</small>{% else %}—{% endif %}</strong></div>
+          <div class="metric"><span class="metric-label">Auswertbare Tage</span><strong>{{ trend.eligible_days }} <small>/ 7</small></strong></div>
+          <div class="metric"><span class="metric-label">Auswertbare Stimmen</span><strong>{{ trend.visible_votes }}</strong></div>
+        </div>
+        <figure class="trend-figure" aria-labelledby="trend-caption">
+          <figcaption id="trend-caption">Durchschnittliche Team-Stimmung der letzten sieben Tage (Skala 1 bis 5)</figcaption>
+          <svg id="mood-trend-chart" viewBox="0 0 720 280" aria-hidden="true" focusable="false"><text x="360" y="135" text-anchor="middle" fill="#68766a">Diagramm wird geladen …</text></svg>
+        </figure>
+        {{ trend.points|json_script:"trend-data" }}
+        <div class="trend-details">
+          <table class="trend-table">
+            <caption>Barrierefreie Wochenübersicht</caption>
+            <thead><tr><th scope="col">Tag</th><th scope="col">Durchschnitt</th><th scope="col">Abgaben</th></tr></thead>
+            <tbody>{% for point in trend.points %}
+              <tr><th scope="row">{{ point.label }}, {{ point.date_label }}</th>
+                <td>{% if point.average is not None %}{{ point.average|floatformat:1 }} / 5{% elif point.has_votes %}Geschützt{% else %}Keine Daten{% endif %}</td>
+                <td>{% if point.count is not None %}{{ point.count }}{% elif point.has_votes %}Weniger als 5{% else %}0{% endif %}</td></tr>
+            {% endfor %}</tbody>
+          </table>
+        </div>
+        <p class="threshold-note">🔒 Tageswerte werden erst ab {{ trend.minimum }} Abstimmungen veröffentlicht. Unterdrückte Tage fließen nicht in den Wochenmittelwert ein.</p>
+      </section>
+    </main>
+    <footer class="footer"><span>✳ TeamPulse</span><span>Ein kleiner Check-in. Ein besseres Miteinander.</span></footer>
+  </div>
+</body>
+</html>

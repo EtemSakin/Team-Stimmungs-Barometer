@@ -1,0 +1,2 @@
+# Epic 02 – Spezifikation
+Django aggregiert pro lokalem Datum die Anzahl und den Durchschnitt aller Scores. Tageswerte mit count < 5 werden als average=null und count=null an das Template/JS übergeben. Der Wochenmittelwert ist die nach Stimmen gewichtete Zahl über ausschließlich sichtbare Tage. SVG zeichnet nur zwischen benachbarten Tagen mit freigegebenen Werten. Eine HTML-Tabelle liefert barrierearme Darstellung. Kein Rohwert an das Browser-JavaScript. Akzeptanz: 0 → Leerdarstellung; 1–4 → unterdrückt; ≥5 → Wert sichtbar; alte Stimmen ausgeschlossen.
