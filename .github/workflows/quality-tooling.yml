@@ -1,0 +1,39 @@
+name: Workflow static quality
+on:
+  push:
+    branches: [staging, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [staging]
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.25'
+      - name: Install pinned actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+      - name: Validate GitHub Actions
+        run: '"$(go env GOPATH)/bin/actionlint" -color'
+
+  sensitive-files:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Guard tracked dotenv files
+        run: |
+          python - <<'PY'
+          import subprocess
+          files = subprocess.check_output(["git", "ls-files", "-z"]).decode().split("\0")
+          offenders = [p for p in files if p and (p == ".env" or p.endswith("/.env") or p.startswith(".env.") or "/.env." in p) and not p.endswith(".env.example")]
+          if offenders:
+              raise SystemExit("Tracked private dotenv configuration: " + ", ".join(offenders))
+          print("No private dotenv files tracked")
+          PY
