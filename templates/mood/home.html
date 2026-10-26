@@ -7,6 +7,8 @@
   <meta name="description" content="Anonymes Team-Stimmungs-Barometer mit täglichem Check-in.">
   <title>TeamPulse – Stimmungs-Barometer</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <script defer src="{% static 'js/trend.js' %}"></script>
 </head>
 <body>
   <div class="page">
@@ -68,7 +70,28 @@
           <div><p class="section-overline">02 / TEAMÜBERBLICK</p><h2 id="insights-title">Gemeinsam im Blick</h2></div>
           <span class="step-chip">Letzte 7 Tage</span>
         </div>
-        <p class="insights-placeholder">Der Teamtrend wird nach mindestens fünf Abstimmungen pro Tag angezeigt. So bleiben einzelne Stimmen geschützt.</p>
+        <div class="metrics">
+          <div class="metric"><span class="metric-label">Durchschnitt sichtbarer Tage</span><strong>{% if trend.average_score is not None %}{{ trend.average_score|floatformat:1 }} <small>/ 5</small>{% else %}—{% endif %}</strong></div>
+          <div class="metric"><span class="metric-label">Auswertbare Tage</span><strong>{{ trend.eligible_days }} <small>/ 7</small></strong></div>
+          <div class="metric"><span class="metric-label">Auswertbare Stimmen</span><strong>{{ trend.visible_votes }}</strong></div>
+        </div>
+        <figure class="trend-figure" aria-labelledby="trend-caption">
+          <figcaption id="trend-caption">Durchschnittliche Team-Stimmung der letzten sieben Tage (Skala 1 bis 5)</figcaption>
+          <svg id="mood-trend-chart" viewBox="0 0 720 280" aria-hidden="true" focusable="false"><text x="360" y="135" text-anchor="middle" fill="#68766a">Diagramm wird geladen …</text></svg>
+        </figure>
+        {{ trend.points|json_script:"trend-data" }}
+        <div class="trend-details">
+          <table class="trend-table">
+            <caption>Barrierefreie Wochenübersicht</caption>
+            <thead><tr><th scope="col">Tag</th><th scope="col">Durchschnitt</th><th scope="col">Abgaben</th></tr></thead>
+            <tbody>{% for point in trend.points %}
+              <tr><th scope="row">{{ point.label }}, {{ point.date_label }}</th>
+                <td>{% if point.average is not None %}{{ point.average|floatformat:1 }} / 5{% elif point.has_votes %}Geschützt{% else %}Keine Daten{% endif %}</td>
+                <td>{% if point.count is not None %}{{ point.count }}{% elif point.has_votes %}Weniger als 5{% else %}0{% endif %}</td></tr>
+            {% endfor %}</tbody>
+          </table>
+        </div>
+        <p class="threshold-note">🔒 Tageswerte werden erst ab {{ trend.minimum }} Abstimmungen veröffentlicht. Unterdrückte Tage fließen nicht in den Wochenmittelwert ein.</p>
       </section>
     </main>
     <footer class="footer"><span>✳ TeamPulse</span><span>Ein kleiner Check-in. Ein besseres Miteinander.</span></footer>

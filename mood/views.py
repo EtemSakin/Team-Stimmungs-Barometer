@@ -14,6 +14,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .forms import MOODS, MoodForm
 from .models import MoodEntry
+from .trends import build_week_trend
 
 COOKIE_NAME = "mood_browser"
 COOKIE_PATTERN = re.compile(r"^[A-Za-z0-9_-]{40,100}$")
@@ -53,6 +54,7 @@ def home(request: HttpRequest) -> HttpResponse:
         "moods": MOODS,
         "has_voted": has_voted,
         "status": request.GET.get("status", ""),
+        "trend": build_week_trend(today),
     }
     return _with_cookie(render(request, "mood/home.html", context), token)
 
@@ -67,6 +69,7 @@ def vote(request: HttpRequest) -> HttpResponse:
             "moods": MOODS,
             "has_voted": False,
             "status": "invalid",
+            "trend": build_week_trend(timezone.localdate()),
         }, status=400)
         return _with_cookie(response, token)
 
