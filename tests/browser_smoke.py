@@ -53,6 +53,14 @@ def main():
             first.reload()
             first.screenshot(path=str(ARTIFACT_DIR / "mobile-dashboard.png"), full_page=True)
             overflow = first.evaluate("document.documentElement.scrollWidth > window.innerWidth")
+            if overflow:
+                offenders = first.evaluate("""() => Array.from(document.querySelectorAll('*'))
+                  .map(el => ({tag: el.tagName, cls: String(el.className).slice(0,80),
+                               right: Math.round(el.getBoundingClientRect().right),
+                               width: Math.round(el.getBoundingClientRect().width)}))
+                  .filter(el => el.right > window.innerWidth + 1)
+                  .sort((a,b) => b.right - a.right).slice(0,10)""")
+                print("MOBILE OVERFLOW OFFENDERS:", offenders)
             assert not overflow, "Horizontal mobile overflow"
             print("BROWSER SMOKE TEST PASSED: voting, privacy threshold, SVG and mobile layout")
         finally:
