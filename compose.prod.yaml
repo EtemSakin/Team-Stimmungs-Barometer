@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    command: sh -c "python manage.py migrate --noinput && gunicorn barometer.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+    environment:
+      DJANGO_DEBUG: "0"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Provide production key}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?Provide allowed hosts}
+      DJANGO_SSL_REDIRECT: "0"
+      DATABASE_PATH: /app/data/db.sqlite3
+    volumes:
+      - prod_data:/app/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+volumes:
+  prod_data:

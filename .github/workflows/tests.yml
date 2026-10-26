@@ -1,0 +1,29 @@
+name: Tests
+on:
+  push:
+    branches: [staging, "feature/**", "fix/**"]
+  pull_request:
+    branches: [staging]
+permissions:
+  contents: read
+jobs:
+  django:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Verify Django config
+        run: python manage.py check
+      - name: Verify migrations
+        run: python manage.py makemigrations --check --dry-run
+      - name: Run all tests
+        run: python manage.py test --verbosity 2
+      - name: Lint Python
+        run: ruff check --select E4,E7,E9,F .
+      - name: Verify static files
+        run: python manage.py collectstatic --noinput
