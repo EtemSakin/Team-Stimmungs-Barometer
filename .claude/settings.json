@@ -1,0 +1,1 @@
+{"permissions":{"allow":["Bash(python manage.py check)","Bash(python manage.py test)","Bash(python manage.py makemigrations --check --dry-run)","Bash(ruff check *)"]}}

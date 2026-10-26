@@ -1,0 +1,31 @@
+name: Browser smoke test
+on:
+  pull_request:
+    branches: [staging]
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install app and Playwright
+        run: pip install -r requirements.txt "playwright>=1.55,<2"
+      - name: Install headless Chromium
+        run: python -m playwright install chromium
+      - name: Run browser acceptance
+        run: |
+          python manage.py migrate --noinput
+          python manage.py runserver 127.0.0.1:8000 > /tmp/teampulse-server.log 2>&1 &
+          python tests/browser_smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: teampulse-browser-screenshots
+          path: artifacts/
+          if-no-files-found: ignore
