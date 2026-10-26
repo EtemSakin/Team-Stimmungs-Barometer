@@ -1,7 +1,5 @@
 name: Browser smoke test
 on:
-  push:
-    branches: [staging, "feature/**", "fix/**"]
   pull_request:
     branches: [staging]
 permissions:
@@ -9,6 +7,7 @@ permissions:
 jobs:
   chromium:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -18,7 +17,7 @@ jobs:
       - name: Install app and Playwright
         run: pip install -r requirements.txt "playwright>=1.55,<2"
       - name: Install headless Chromium
-        run: python -m playwright install --with-deps chromium
+        run: python -m playwright install chromium
       - name: Run browser acceptance
         run: |
           python manage.py migrate --noinput
