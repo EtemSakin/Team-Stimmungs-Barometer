@@ -39,7 +39,7 @@ Browser: http://127.0.0.1:8000.
     ruff check --select E4,E7,E9,F .
     python manage.py collectstatic --noinput
 
-Die Browser-Testpläne stehen unter specs/tests. CI läuft bei Pushes auf Feature-Branches und PRs nach staging.
+Die Browser-Testpläne stehen unter specs/tests. GitHub Actions prüft Django-Tests und Lint, und ein separater Playwright-Chromium-Workflow prüft echte Desktop- und Mobile-Browserabläufe bei Pull Requests nach staging. Screenshots werden als CI-Artifakt gespeichert. Für den lokalen Browser-Test: pip install playwright && python -m playwright install chromium; Django starten und python tests/browser_smoke.py ausführen.
 
 ## Für eine Produktionsumgebung
 
